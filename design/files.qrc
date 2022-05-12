@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="images">
+    <file>Resources/carbon.jpg</file>
+    <file>Resources/isol_icon.png</file>
+  </qresource>
+</RCC>
