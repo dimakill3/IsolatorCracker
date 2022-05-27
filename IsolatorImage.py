@@ -272,3 +272,9 @@ class IsolatorImage(Image):
                 for bVal in range(240, 255):
                     self.localPalette.append([rVal, gVal, bVal])
         self.localPalette = np.array(self.localPalette)
+
+    def MakePaletteForWhite(self):
+        self.localPalette = []
+        for val in range(70, 160):
+            self.localPalette.append([val, val, val])
+        self.localPalette = np.array(self.localPalette)

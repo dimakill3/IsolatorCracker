@@ -2,52 +2,10 @@ import os
 import random
 import numpy as np
 import cv2 as cv
-
 import ConstValues
 from IsolatorImage import IsolatorImage
-from Crack import Crack
-
+from CrackImage import Crack
 isolatorsTypesDictionary = {"glass": 0, "ceramicbrown": 1, "ceramicwhite": 2}
-
-
-# def StartCompute(isolatorsDir: str, masksDir: str, crackScale: int, isolatorType: str, isolatorColor: str, sidesForGenerate: list, crackedIsolatorsDir: str):
-#     for maskName, imageName in zip(os.listdir(masksDir), os.listdir(isolatorsDir)):
-#         print("Коричневый изолятор " + imageName + ":")
-#         isol = IsolatorImage()
-#         # Считываем изображение и маску изолятора
-#         isol.ReadImage(isolatorsDir + imageName)
-#         # Если изображение плохое, отсеиваем его
-#         if isol.weight > isol.height:
-#             del isol
-#             continue
-#         isol.ReadMask(masksDir + maskName)
-#         # Вырезаем цветной изолятор по маске
-#         isol.MakeMaskedImage()
-#         # Узнаём контур изолятора для нанесения трещин
-#         isol.MakeContour()
-#         # Корректируем размер трещины для изолятора
-#         # (Если изображение изолятора слишком маленькое, трещина должна быть меньше)
-#         crackScale = random.randint(crackScale - 1, crackScale + 1)
-#         cH, cW = isol.GetCrackSize(crackScale)
-#
-#         if sidesForGenerate.count(ConstValues.sidesForGenerate['left']) > 0:
-#             # Наносим трещину слева
-#             CrackAddition(isol, imageName, cH, cW, ConstValues.leftEdgeCrackDirectory,
-#                           ConstValues.sidesForGenerate['left'], isolatorsTypesDictionary[isolatorType+isolatorColor],
-#                           crackedIsolatorsDir)
-#         if sidesForGenerate.count(ConstValues.sidesForGenerate['right']) > 0:
-#             # Наносим трещину справа
-#             CrackAddition(isol, imageName, cH, cW, ConstValues.rightEdgeCrackDirectory,
-#                           ConstValues.sidesForGenerate['right'], isolatorsTypesDictionary[isolatorType+isolatorColor],
-#                           crackedIsolatorsDir)
-#         if sidesForGenerate.count(ConstValues.sidesForGenerate['middle']) > 0:
-#             # Наносим трещину по середине
-#             CrackAddition(isol, imageName, cH, cW, ConstValues.middleCrackDirectory,
-#                           ConstValues.sidesForGenerate['middle'], isolatorsTypesDictionary[isolatorType+isolatorColor],
-#                           crackedIsolatorsDir)
-#
-#         # Удаляем изолятор перед тем как взять новый
-#         del isol
 
 
 def CrackAddition(isol, imageName, cH, cW, path, side, isolParam, crackedIsolatorsDir, whiteLimit, gaussianBlurValue,
@@ -93,6 +51,11 @@ def CrackAddition(isol, imageName, cH, cW, path, side, isolParam, crackedIsolato
             isol.MakePalette(begH, begW, crack.height, crack.weight)
         elif isolParam == isolatorsTypesDictionary["ceramicbrown"]:
             isol.MakePaletteForBrown()
+            whiteLimit = 255
+        elif isolParam == isolatorsTypesDictionary["ceramicwhite"]:
+            isol.MakePaletteForWhite()
+            whiteLimit = 255
+
 
         # Если палитра пустая, то скипаем трещину
         if len(isol.localPalette) == 0:

@@ -315,7 +315,6 @@ class IsolatorCracker(QtWidgets.QMainWindow):
                                           QtWidgets.QMessageBox.Ok)
 
 
-
 class ComputeThread(QThread):
     incProgressBar = pyqtSignal(int)
     computeStopped = pyqtSignal(str, int)

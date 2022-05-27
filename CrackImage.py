@@ -68,9 +68,3 @@ class Crack(Image):
         """
         self.image = cv.resize(self.image, (w, self.height))
         self.weight = w
-
-
-    def DelRedContour(self):
-        kernel = np.ones((3, 3), 'uint8')
-        dilate_crack_mask = cv.dilate(self.image, kernel, iterations=1)
-        self.image = cv.erode(dilate_crack_mask, kernel, iterations=1)

@@ -1,9 +1,9 @@
 import os
 
 # region Values
-minCrackScale = 6
+minCrackScale = 5
 currentCrackScale = 7
-maxCrackScale = 8
+maxCrackScale = 15
 
 minWhiteLimit = 0
 currentWhiteLimit = 200
