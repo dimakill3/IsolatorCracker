@@ -116,7 +116,7 @@ class Ui_MainWindow(object):
 "QProgressBar::chunk {\n"
 "    border-radius: 6px;\n"
 "    border-style: solid;\n"
-"    background-color: rgb(167, 24, 50)\n"
+"    background-color: rgb(167, 24, 50);\n"
 "}\n"
 "\n"
 "QLineEdit {\n"
@@ -285,6 +285,21 @@ class Ui_MainWindow(object):
 "    border: 0px solid #a71832;\n"
 "}\n"
 "\n"
+"QPushButton {\n"
+"    color: rgb(215, 215, 215);\n"
+"    background-color: rgb(167, 24, 50);\n"
+"}\n"
+"\n"
+"QPushButton:!enabled {\n"
+"    color: rgb(215, 215, 215);\n"
+"    background-color: rgb(88, 2, 13);\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"    color: rgb(215, 215, 215);\n"
+"    background-color: rgb(109, 3, 16);\n"
+"}\n"
+"\n"
 "/*GROUP BOX*/\n"
 "QGroupBox {\n"
 "    color: #d7d7d7;\n"
@@ -448,7 +463,7 @@ class Ui_MainWindow(object):
         self.leWhiteLimitValue.setObjectName("leWhiteLimitValue")
         self.gridLayout_4.addWidget(self.leWhiteLimitValue, 0, 2, 1, 1)
         self.gbGenerateMethod = QtWidgets.QGroupBox(self.tabProperties)
-        self.gbGenerateMethod.setGeometry(QtCore.QRect(5, 150, 201, 211))
+        self.gbGenerateMethod.setGeometry(QtCore.QRect(5, 160, 201, 201))
         font = QtGui.QFont()
         font.setFamily("Times New Roman")
         font.setPointSize(16)
@@ -477,7 +492,7 @@ class Ui_MainWindow(object):
         self.rbCrackGeneration.setFont(font)
         self.rbCrackGeneration.setObjectName("rbCrackGeneration")
         self.gbGenerateParams = QtWidgets.QGroupBox(self.tabProperties)
-        self.gbGenerateParams.setGeometry(QtCore.QRect(215, 150, 476, 211))
+        self.gbGenerateParams.setGeometry(QtCore.QRect(215, 160, 476, 201))
         font = QtGui.QFont()
         font.setFamily("Times New Roman")
         font.setPointSize(16)
@@ -487,7 +502,7 @@ class Ui_MainWindow(object):
         self.gbGenerateParams.setAlignment(QtCore.Qt.AlignCenter)
         self.gbGenerateParams.setObjectName("gbGenerateParams")
         self.gbPaletteSmoothing = QtWidgets.QGroupBox(self.gbGenerateParams)
-        self.gbPaletteSmoothing.setGeometry(QtCore.QRect(10, 30, 226, 171))
+        self.gbPaletteSmoothing.setGeometry(QtCore.QRect(10, 30, 226, 161))
         font = QtGui.QFont()
         font.setFamily("Times New Roman")
         font.setPointSize(16)
@@ -497,7 +512,7 @@ class Ui_MainWindow(object):
         self.gbPaletteSmoothing.setAlignment(QtCore.Qt.AlignCenter)
         self.gbPaletteSmoothing.setObjectName("gbPaletteSmoothing")
         self.widget = QtWidgets.QWidget(self.gbPaletteSmoothing)
-        self.widget.setGeometry(QtCore.QRect(5, 30, 216, 131))
+        self.widget.setGeometry(QtCore.QRect(5, 30, 216, 121))
         self.widget.setObjectName("widget")
         self.gridLayout_2 = QtWidgets.QGridLayout(self.widget)
         self.gridLayout_2.setContentsMargins(0, 0, 0, 0)
@@ -542,7 +557,7 @@ class Ui_MainWindow(object):
         self.lePaletteSmoothingValue.setObjectName("lePaletteSmoothingValue")
         self.gridLayout_2.addWidget(self.lePaletteSmoothingValue, 0, 2, 1, 1)
         self.gbGenerateAlgorithm = QtWidgets.QGroupBox(self.gbGenerateParams)
-        self.gbGenerateAlgorithm.setGeometry(QtCore.QRect(241, 30, 226, 171))
+        self.gbGenerateAlgorithm.setGeometry(QtCore.QRect(241, 30, 226, 161))
         font = QtGui.QFont()
         font.setFamily("Times New Roman")
         font.setPointSize(16)
@@ -620,7 +635,7 @@ class Ui_MainWindow(object):
         self.cbLeft.setChecked(True)
         self.cbLeft.setObjectName("cbLeft")
         self.gbCeramicColor = QtWidgets.QGroupBox(self.tabProperties)
-        self.gbCeramicColor.setGeometry(QtCore.QRect(355, 5, 336, 141))
+        self.gbCeramicColor.setGeometry(QtCore.QRect(355, 45, 336, 111))
         font = QtGui.QFont()
         font.setFamily("Times New Roman")
         font.setPointSize(16)
@@ -632,7 +647,7 @@ class Ui_MainWindow(object):
         self.gbCeramicColor.setCheckable(False)
         self.gbCeramicColor.setObjectName("gbCeramicColor")
         self.rbBrown = QtWidgets.QRadioButton(self.gbCeramicColor)
-        self.rbBrown.setGeometry(QtCore.QRect(10, 40, 308, 28))
+        self.rbBrown.setGeometry(QtCore.QRect(10, 30, 308, 28))
         font = QtGui.QFont()
         font.setFamily("Times New Roman")
         font.setPointSize(16)
@@ -642,7 +657,7 @@ class Ui_MainWindow(object):
         self.rbBrown.setObjectName("rbBrown")
         self.rbBrown.setChecked(True)
         self.rbWhite = QtWidgets.QRadioButton(self.gbCeramicColor)
-        self.rbWhite.setGeometry(QtCore.QRect(10, 80, 311, 28))
+        self.rbWhite.setGeometry(QtCore.QRect(10, 70, 311, 28))
         font = QtGui.QFont()
         font.setFamily("Times New Roman")
         font.setPointSize(16)
@@ -710,7 +725,7 @@ class Ui_MainWindow(object):
         self.leGaussianBlurValue.setObjectName("leGaussianBlurValue")
         self.gridLayout_5.addWidget(self.leGaussianBlurValue, 0, 2, 1, 1)
         self.gbIsolatorType = QtWidgets.QGroupBox(self.tabProperties)
-        self.gbIsolatorType.setGeometry(QtCore.QRect(5, 5, 336, 141))
+        self.gbIsolatorType.setGeometry(QtCore.QRect(5, 45, 336, 111))
         font = QtGui.QFont()
         font.setFamily("Times New Roman")
         font.setPointSize(16)
@@ -720,7 +735,7 @@ class Ui_MainWindow(object):
         self.gbIsolatorType.setAlignment(QtCore.Qt.AlignCenter)
         self.gbIsolatorType.setObjectName("gbIsolatorType")
         self.rbGlass = QtWidgets.QRadioButton(self.gbIsolatorType)
-        self.rbGlass.setGeometry(QtCore.QRect(10, 40, 319, 28))
+        self.rbGlass.setGeometry(QtCore.QRect(10, 30, 319, 28))
         font = QtGui.QFont()
         font.setFamily("Times New Roman")
         font.setPointSize(16)
@@ -730,7 +745,7 @@ class Ui_MainWindow(object):
         self.rbGlass.setChecked(True)
         self.rbGlass.setObjectName("rbGlass")
         self.rbCeramic = QtWidgets.QRadioButton(self.gbIsolatorType)
-        self.rbCeramic.setGeometry(QtCore.QRect(10, 80, 319, 28))
+        self.rbCeramic.setGeometry(QtCore.QRect(10, 70, 319, 28))
         font = QtGui.QFont()
         font.setFamily("Times New Roman")
         font.setPointSize(16)
@@ -792,6 +807,21 @@ class Ui_MainWindow(object):
         self.leCrackScaleValue.setAlignment(QtCore.Qt.AlignCenter)
         self.leCrackScaleValue.setObjectName("leCrackScaleValue")
         self.gridLayout_3.addWidget(self.leCrackScaleValue, 0, 3, 1, 1)
+        self.horizontalLayoutWidget = QtWidgets.QWidget(self.tabProperties)
+        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(10, 5, 680, 40))
+        self.horizontalLayoutWidget.setObjectName("horizontalLayoutWidget")
+        self.horizontalLayout_7 = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget)
+        self.horizontalLayout_7.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout_7.setObjectName("horizontalLayout_7")
+        self.btnGlassMode = QtWidgets.QPushButton(self.horizontalLayoutWidget)
+        self.btnGlassMode.setObjectName("btnGlassMode")
+        self.horizontalLayout_7.addWidget(self.btnGlassMode)
+        self.btnCeramicBrownMode = QtWidgets.QPushButton(self.horizontalLayoutWidget)
+        self.btnCeramicBrownMode.setObjectName("btnCeramicBrownMode")
+        self.horizontalLayout_7.addWidget(self.btnCeramicBrownMode)
+        self.btnCeramicWhiteMode = QtWidgets.QPushButton(self.horizontalLayoutWidget)
+        self.btnCeramicWhiteMode.setObjectName("btnCeramicWhiteMode")
+        self.horizontalLayout_7.addWidget(self.btnCeramicWhiteMode)
         self.mainTabWidget.addTab(self.tabProperties, "")
         MainWindow.setCentralWidget(self.mainWidget)
 
@@ -848,6 +878,9 @@ class Ui_MainWindow(object):
         self.lblCrackScaleTextValue.setText(_translate("MainWindow", "value:"))
         self.lblCrackScaleMin.setText(_translate("MainWindow", "0"))
         self.leCrackScaleValue.setText(_translate("MainWindow", "0"))
+        self.btnGlassMode.setText(_translate("MainWindow", "Glass mode"))
+        self.btnCeramicBrownMode.setText(_translate("MainWindow", "Ceramic brown mode"))
+        self.btnCeramicWhiteMode.setText(_translate("MainWindow", "Ceramic white mode"))
         self.mainTabWidget.setTabText(self.mainTabWidget.indexOf(self.tabProperties), _translate("MainWindow", "Properties"))
 import design.files_rc
 

@@ -4,6 +4,8 @@ import random
 
 import cv2 as cv
 import numpy as np
+
+from BasePoints import BasePoints
 from Image import Image
 
 
@@ -48,7 +50,10 @@ class IsolatorImage(Image):
 
     contour = None  # Контур изолятора
 
-    middleContourIndex = int
+    # middleContourIndex = int
+
+    basePoints = None
+
 
     def ReadMask(self, maskPath=str):
         """Считывание маски изолятора с диска
@@ -69,7 +74,22 @@ class IsolatorImage(Image):
         """
         self.maskedImage = cv.bitwise_and(self.image, self.image, mask=self.mask)
 
-    def MakePalette(self, begH, begW, h, w, smoothRange=5):
+    def MakeContour(self):
+        # Находим контур маски
+        contour, hierarchy = cv.findContours(self.mask, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+        # Строим удобный контур
+        self.contour = [point[0] for point in contour[0]]
+        self.FindBasePoints()
+
+        # Находим самую нижнюю точку контура изолятора
+        # hightSlice = [point[1] for point in self.contour]
+        # self.middleContourIndex = hightSlice.index(max(hightSlice))
+
+    def FindBasePoints(self):
+        self.basePoints = BasePoints()
+        self.basePoints.BuildBasePoints(self.contour)
+
+    def MakePalette(self, begW, begH, w, h, smoothRange=5):
         """Создание локальной палитры
 
         :param begH: высота до левого верхнего угла baudbox'а
@@ -88,11 +108,10 @@ class IsolatorImage(Image):
 
         self.localPalette = np.unique(self.localPalette, axis=0)
 
-        darkLimit = 100
-        whiteLimit = 230
+        darkLimit = 40
         count = 0
         while count != len(self.localPalette):
-            if all([el > darkLimit for el in self.localPalette[count]]): #and all([el < whiteLimit for el in self.localPalette[count]]):
+            if all([el > darkLimit for el in self.localPalette[count]]):
                 count += 1
             else:
                 self.localPalette = np.delete(self.localPalette, count, axis=0)
@@ -109,11 +128,14 @@ class IsolatorImage(Image):
         idx = b.argsort()
         self.localPalette = [self.localPalette[i] for i in idx]
 
-        self.localPalette = np.array(smoothing(self.localPalette, smoothRange), dtype='uint8')
+        if len(self.localPalette) > 25:
+            self.localPalette = np.array(smoothing(self.localPalette, smoothRange), dtype='uint8')
+        else:
+            self.localPalette = np.array(self.localPalette, dtype='uint8')
 
         # endregion
 
-    def AddCrack(self, crackImage, begH, begW, h, w, alpha, isBlur=False, gaussianBlur=3):
+    def AddDefect(self, crackImage, begW: int, begH: int, w: int, h: int, alpha: float, isBlur=False, gaussianBlur=3):
         """Наложение трещины на изолятор
 
         :param gaussianBlur:
@@ -147,11 +169,6 @@ class IsolatorImage(Image):
 
         crackedImage[begH:begH + h, begW:begW + w] = boundImage
 
-        # for i in range(begH, begH + h):
-        #     for j in range(begW, begW + w):
-        #         if list(crackImage[i - begH][j - begW]) != [0, 0, 0]:
-        #             self.image[i][j] = boundImage[i - begH][j - begW]
-
         return crackedImage
 
     def GetCrackSize(self, crackScale):
@@ -170,25 +187,12 @@ class IsolatorImage(Image):
 
         return crackH, crackW
 
-    def MakeContour(self):
-        # Находим контур маски
-        contour, hierarchy = cv.findContours(self.mask, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
-        # Строим удобный контур
-        self.contour = [point[0] for point in contour[0]]
-
-        hightSlice = [point[1] for point in self.contour]
-
-        self.middleContourIndex = hightSlice.index(max(hightSlice))
-
-        # print(self.contour[self.middleContourIndex])
-        # self.middleContourIndex = int(len(self.contour) / 2)
-
-    def FindEdgePlace(self, h, w, side):
+    def FindEdgePlace(self, w, h, side):
         # region Находим необходимые точки
         if side == "left":
             tryCount = 0
             while True:
-                leftPointIndex = int(self.middleContourIndex - random.randint(0, int(len(self.contour) * 0.1)))
+                leftPointIndex = int(self.basePoints.middlePointIndex - random.randint(0, int(len(self.contour) * 0.1)))
                 leftPoint = self.contour[leftPointIndex]
                 # leftPoint[1] -= 2
                 # Проверяем, помещается ли трещина. Если трещина не поместилась много раз, скипаем её (возвращаем ошибку)
@@ -206,10 +210,11 @@ class IsolatorImage(Image):
                     continue
 
             return leftPoint[1] - h, leftPoint[0]
+
         elif side == "right":
             tryCount = 0
             while True:
-                rightPointIndex = int(self.middleContourIndex + random.randint(0, int(len(self.contour) * 0.1)))
+                rightPointIndex = int(self.basePoints.middlePointIndex + random.randint(0, int(len(self.contour) * 0.1)))
                 rightPoint = self.contour[rightPointIndex]
                 # rightPoint[1] -= 2
                 # Проверяем, помещается ли трещина. Если трещина не поместилась много раз, скипаем её (возвращаем ошибку)
@@ -229,18 +234,18 @@ class IsolatorImage(Image):
             return rightPoint[1] - h, rightPoint[0] - w
 
         elif side == "middle":
-            middlePoint = self.contour[self.middleContourIndex]
+            middlePoint = self.contour[self.basePoints.middlePointIndex]
 
             return middlePoint[1] - h, middlePoint[0]
         # endregion
 
-    def FindMiddlePlace(self, h, w):
+    def FindMiddlePlace(self, w, h):
         tryCount = 0
         middleLine = self.height - int(self.height / 3)
         ringSize = 15
         while True:
             randomSide = random.choice(["right", "left", "middle"])
-            edgeH, edgeW = self.FindEdgePlace(h, w, randomSide)
+            edgeH, edgeW = self.FindEdgePlace(w, h, randomSide)
 
             if edgeH == -1:
                 return -1, -1

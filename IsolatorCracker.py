@@ -1,11 +1,11 @@
 import math
+import random
 import sys
 import os
-import random
-import CrackAdditionManager
+import DefectImposeManager
 import ConstValues
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtWidgets
 from PyQt5.QtCore import QThread, pyqtSignal
 from IsolatorImage import IsolatorImage
 
@@ -17,8 +17,10 @@ tabPages = {'tabCompute': 0, 'tabProperties': 1}
 
 # Класс-расширение GUI для реализации логики
 class IsolatorCracker(QtWidgets.QMainWindow):
-    props = Properties()
+    properties = Properties()
+    optimalValues = ConstValues.OptimalValues()
     ComputeThreadInstance = None
+    gaussianBlurLastValue = 0
 
     # Инициализируем расширяющий класс
     def __init__(self):
@@ -45,29 +47,36 @@ class IsolatorCracker(QtWidgets.QMainWindow):
         self.ui.cbLeft.clicked.connect(lambda: self.sidesParameterChanged(ConstValues.sidesForGenerate['left']))
         self.ui.cbMiddle.clicked.connect(lambda: self.sidesParameterChanged(ConstValues.sidesForGenerate['middle']))
         self.ui.cbRight.clicked.connect(lambda: self.sidesParameterChanged(ConstValues.sidesForGenerate['right']))
+        self.ui.btnGlassMode.clicked.connect(lambda: self.parametersModeChanged(ConstValues.isolatorsTypes['glass']))
+        self.ui.btnCeramicBrownMode.clicked.connect(lambda: self.parametersModeChanged(ConstValues.isolatorsTypes['ceramicbrown']))
+        self.ui.btnCeramicWhiteMode.clicked.connect(lambda: self.parametersModeChanged(ConstValues.isolatorsTypes['ceramicwhite']))
         # Инициализируем слайдеры
         self.initSlider(self.ui.lblWhiteLimitMin, self.ui.lblWhiteLimitMax, ConstValues.minWhiteLimit,
-                        ConstValues.maxWhiteLimit, ConstValues.currentWhiteLimit,
+                        ConstValues.maxWhiteLimit, self.optimalValues.optimalWhiteLimit,
                         self.ui.sliderWhiteLimit, self.ui.leWhiteLimitValue)
 
         self.initSlider(self.ui.lblGaussianBlurMin, self.ui.lblGaussianBlurMax, ConstValues.minGaussianBlur,
-                        ConstValues.maxGaussianBlur, ConstValues.currentGaussianBlur,
+                        ConstValues.maxGaussianBlur, self.optimalValues.optimalGaussianBlur,
                         self.ui.sliderGaussianBlur, self.ui.leGaussianBlurValue)
 
+        self.gaussianBlurLastValue = self.ui.sliderGaussianBlur.value()
+
+        self.ui.sliderGaussianBlur.valueChanged.connect(lambda: self.customizeGaussianSliderStep())
+
         self.initSlider(self.ui.lblCrackScaleMin, self.ui.lblCrackScaleMax, ConstValues.minCrackScale,
-                        ConstValues.maxCrackScale, ConstValues.currentCrackScale,
+                        ConstValues.maxCrackScale, self.optimalValues.optimalCrackScale,
                         self.ui.sliderCrackScale, self.ui.leCrackScaleValue)
 
         self.initSlider(self.ui.lblPaletteSmoothingMin, self.ui.lblPaletteSmoothingMax, ConstValues.minPaletteSmoothing,
-                        ConstValues.maxPaletteSmoothing, ConstValues.currentPaletteSmoothing,
+                        ConstValues.maxPaletteSmoothing, self.optimalValues.optimalPaletteSmoothing,
                         self.ui.sliderPaletteSmoothing, self.ui.lePaletteSmoothingValue)
 
-        # Логика Radio Button
-        self.ui.rbCeramic.clicked.connect(lambda: self.setElementVisible(self.ui.gbCeramicColor, True))
-        self.ui.rbGlass.clicked.connect(lambda: self.setElementVisible(self.ui.gbCeramicColor, False))
+        # Логика Radio Button\
+        self.ui.rbCeramic.toggled.connect(lambda: self.setElementVisible(self.ui.gbCeramicColor, True))
+        self.ui.rbGlass.toggled.connect(lambda: self.setElementVisible(self.ui.gbCeramicColor, False))
 
-        self.ui.rbCrackGeneration.clicked.connect(lambda: self.setElementVisible(self.ui.gbGenerateParams, True))
-        self.ui.rbCrackAddition.clicked.connect(lambda: self.setElementVisible(self.ui.gbGenerateParams, False))
+        self.ui.rbCrackGeneration.toggled.connect(lambda: self.setElementVisible(self.ui.gbGenerateParams, True))
+        self.ui.rbCrackAddition.toggled.connect(lambda: self.setElementVisible(self.ui.gbGenerateParams, False))
         # Логика смены страницы
         self.ui.mainTabWidget.currentChanged.connect(self.mainTabWidgetPageChanged)
 
@@ -90,8 +99,10 @@ class IsolatorCracker(QtWidgets.QMainWindow):
         self.freezeSomeUIWhileCompute(True)
         # Чистим логи
         self.ui.teLogs.clear()
+        self.properties.setCrackedIsolatorsDir(self.ui.lePathToFolder.text() + '/')
+        self.properties.setHowIsolatorsToCompute(int(self.ui.leHowIsolatorsCompute.text()))
         # Запускаем поток генерации
-        self.ComputeThreadInstance = ComputeThread(mainWindow=self)
+        self.ComputeThreadInstance = ComputeThread(properties=self.properties, logs=self.ui.teLogs)
         self.ComputeThreadInstance.start()
         # Подписываемся на сигналы из потока
         self.ComputeThreadInstance.incProgressBar.connect(self.increaceProgressBarValue)
@@ -179,18 +190,27 @@ class IsolatorCracker(QtWidgets.QMainWindow):
         elif self.ui.rbCrackGeneration.isChecked():
             computeType = ConstValues.computeTypes['generation']
 
-        self.props = Properties(isolatorsDir, masksDir, self.ui.sliderCrackScale.value(),
-                                self.ui.sliderWhiteLimit.value(), self.ui.sliderGaussianBlur.value(),
-                                isolatorType, isolatorColor, computeType)
+        fillAlgorithm = 0
+
+        if self.ui.rbVoronoyDiagram.isChecked():
+            fillAlgorithm = ConstValues.fillAlgorithms['voronoi']
+        elif self.ui.rbPerlinNoise.isChecked():
+            fillAlgorithm = ConstValues.fillAlgorithms['perlin']
+        elif self.ui.rbRangeInCrack.isChecked():
+            fillAlgorithm = ConstValues.fillAlgorithms['range']
+
+        self.properties = Properties(isolatorType, isolatorColor, isolatorsDir, masksDir, crackScale=self.ui.sliderCrackScale.value(),
+                                     whiteLimit=self.ui.sliderWhiteLimit.value(), gaussianBlur=self.ui.sliderGaussianBlur.value(),
+                                     paletteSmoothing=self.ui.sliderPaletteSmoothing.value(), computeType=computeType, fillAlgorithm=fillAlgorithm)
 
         if self.ui.cbLeft.isChecked():
-            self.props.addSideForGenerate(ConstValues.sidesForGenerate['left'])
+            self.properties.addSideForGenerate('left')
 
         if self.ui.cbMiddle.isChecked():
-            self.props.addSideForGenerate(ConstValues.sidesForGenerate['middle'])
+            self.properties.addSideForGenerate('middle')
 
         if self.ui.cbRight.isChecked():
-            self.props.addSideForGenerate(ConstValues.sidesForGenerate['right'])
+            self.properties.addSideForGenerate('right')
 
     def mainTabWidgetPageChanged(self):
         """
@@ -202,8 +222,8 @@ class IsolatorCracker(QtWidgets.QMainWindow):
             neededExtention = '.png'
 
             numFiles = 0
-            for file in os.listdir(self.props.isolatorsDir):
-                if os.path.isfile(os.path.join(self.props.isolatorsDir, file)) and file.join(neededExtention):
+            for file in os.listdir(self.properties.isolatorsDir):
+                if os.path.isfile(os.path.join(self.properties.isolatorsDir, file)) and file.join(neededExtention):
                     numFiles += 1
 
             if numFiles == 0:
@@ -211,7 +231,7 @@ class IsolatorCracker(QtWidgets.QMainWindow):
             else:
                 self.enableCompute(True)
 
-            strFoundIsolators = f"Found {numFiles} {self.props.isolatorType + '' + self.props.isolatorColor} isolators"
+            strFoundIsolators = f"Found {numFiles} {self.properties.isolatorType + '' + self.properties.isolatorColor} isolators"
 
             self.initSlider(self.ui.lblComputeIsolatorsMin, self.ui.lblComputeIsolatorsMax,
                             1, numFiles, numFiles, self.ui.sliderComputeIsolators, self.ui.leHowIsolatorsCompute)
@@ -302,6 +322,43 @@ class IsolatorCracker(QtWidgets.QMainWindow):
 
         slider.setValue(currentValue)
 
+    def customizeGaussianSliderStep(self):
+        newValue = self.ui.sliderGaussianBlur.value()
+        if self.gaussianBlurLastValue < newValue:
+            if newValue % 2 == 1:
+                self.ui.sliderGaussianBlur.setValue(newValue)
+            else:
+                self.ui.sliderGaussianBlur.setValue(newValue + 1)
+        elif self.gaussianBlurLastValue > newValue:
+            if newValue % 2 == 1:
+                self.ui.sliderGaussianBlur.setValue(newValue)
+            else:
+                self.ui.sliderGaussianBlur.setValue(newValue - 1)
+
+
+    def setSliderValue(self, slider: QtWidgets.QSlider, value: int):
+        slider.setValue(value)
+
+    def parametersModeChanged(self, chooseMode):
+        values = ConstValues.OptimalValues()
+
+        values.getModeSettings(chooseMode)
+
+        if chooseMode == ConstValues.isolatorsTypes['glass']:
+            self.ui.rbGlass.setChecked(True)
+        else:
+            self.ui.rbCeramic.setChecked(True)
+            if chooseMode == ConstValues.isolatorsTypes['ceramicbrown']:
+                self.ui.rbBrown.setChecked(True)
+            elif chooseMode == ConstValues.isolatorsTypes['ceramicwhite']:
+                self.ui.rbWhite.setChecked(True)
+
+        self.setSliderValue(self.ui.sliderCrackScale, values.optimalCrackScale)
+        self.setSliderValue(self.ui.sliderWhiteLimit, values.optimalWhiteLimit)
+        self.setSliderValue(self.ui.sliderGaussianBlur, values.optimalGaussianBlur)
+        self.setSliderValue(self.ui.sliderPaletteSmoothing, values.optimalPaletteSmoothing)
+        pass
+
     def sidesParameterChanged(self, side: int):
         if not self.ui.cbLeft.isChecked() and not self.ui.cbMiddle.isChecked() and not self.ui.cbRight.isChecked():
             if side == ConstValues.sidesForGenerate['left']:
@@ -320,81 +377,57 @@ class ComputeThread(QThread):
     computeStopped = pyqtSignal(str, int)
     computeFinished = pyqtSignal(str, int)
 
-    def __init__(self, mainWindow: IsolatorCracker, parent=None):
+    def __init__(self, properties: Properties, logs: QtWidgets.QTextEdit, parent=None):
         super(ComputeThread, self).__init__(parent)
-        self.mainWindow = mainWindow
+        self.properties = properties
+        self.logs = logs
 
     def run(self):
-        if self.mainWindow.props.computeType == ConstValues.computeTypes['addition']:
-            self.StartCrackAddition(self.mainWindow.props.isolatorsDir, self.mainWindow.props.masksDir,
-                                    self.mainWindow.props.crackScale, self.mainWindow.props.isolatorType,
-                                    self.mainWindow.props.isolatorColor, self.mainWindow.props.sidesForGenerate,
-                                    self.mainWindow.ui.lePathToFolder.text() + '/',
-                                    int(self.mainWindow.ui.leHowIsolatorsCompute.text()),
-                                    self.mainWindow.props.whiteLimit,
-                                    self.mainWindow.props.gaussianBlur, self.mainWindow.ui.teLogs)
-        elif self.mainWindow.props.computeType == ConstValues.computeTypes['generation']:
-            self.StartCrackGeneration()
-
-    def stop(self):
-        self.terminate()
-
-    def StartCrackAddition(self, isolatorsDir: str, masksDir: str, crackScale: int, isolatorType: str,
-                           isolatorColor: str,
-                           sidesForGenerate: list, crackedIsolatorsDir: str,
-                           isolatorsToCompute: int, whiteLimit: int, gaussianBlur: int, logs: QtWidgets.QTextEdit):
         crackedIsolatorsCount = 0
-        for maskName, imageName in zip(os.listdir(masksDir), os.listdir(isolatorsDir)):
+        for maskName, imageName in zip(os.listdir(self.properties.masksDir), os.listdir(self.properties.isolatorsDir)):
             if not self.isInterruptionRequested():
                 crackedIsolatorsCount += 1
-                print("Изолятор " + imageName + f"({crackedIsolatorsCount}/{isolatorsToCompute}):")
-                logs.append("Изолятор " + imageName + ":\n")
+                print("Изолятор " + imageName + f"({crackedIsolatorsCount}/{self.properties.howIsolatorsToCompute}):")
+                self.logs.append("Изолятор " + imageName + ":\n")
                 isol = IsolatorImage()
                 # Считываем изображение и маску изолятора
-                isol.ReadImage(isolatorsDir + imageName)
+                isol.ReadImage(self.properties.isolatorsDir + imageName)
                 # Если изображение плохое, отсеиваем его
                 if isol.weight > isol.height:
                     del isol
                     print("\tИзображение не подходит по размеру!")
-                    logs.append("\tИзображение не подходит по размеру!\n")
+                    self.logs.append("\tИзображение не подходит по размеру!\n")
                     continue
-                isol.ReadMask(masksDir + maskName)
+                isol.ReadMask(self.properties.masksDir + maskName)
                 # Вырезаем цветной изолятор по маске
                 isol.MakeMaskedImage()
                 # Узнаём контур изолятора для нанесения трещин
                 isol.MakeContour()
-                # Корректируем размер трещины для изолятора
-                # (Если изображение изолятора слишком маленькое, трещина должна быть меньше)
-                crackScale = random.randint(crackScale - 1, crackScale + 1)
-                cH, cW = isol.GetCrackSize(crackScale)
+                crackScale = random.randint(self.properties.crackScale - 1, self.properties.crackScale + 1)
 
-                if sidesForGenerate.count(ConstValues.sidesForGenerate['left']) > 0:
-                    # Наносим трещину слева
-                    CrackAdditionManager.CrackAddition(isol, imageName, cH, cW, ConstValues.leftEdgeCrackDirectory,
-                                                       ConstValues.sidesForGenerate['left'],
-                                                       ConstValues.isolatorsTypesDictionary[
-                                                           isolatorType + isolatorColor],
-                                                       crackedIsolatorsDir, whiteLimit, gaussianBlur, logs)
-                if sidesForGenerate.count(ConstValues.sidesForGenerate['right']) > 0:
-                    # Наносим трещину справа
-                    CrackAdditionManager.CrackAddition(isol, imageName, cH, cW, ConstValues.rightEdgeCrackDirectory,
-                                                       ConstValues.sidesForGenerate['right'],
-                                                       ConstValues.isolatorsTypesDictionary[
-                                                           isolatorType + isolatorColor],
-                                                       crackedIsolatorsDir, whiteLimit, gaussianBlur, logs)
-                if sidesForGenerate.count(ConstValues.sidesForGenerate['middle']) > 0:
-                    # Наносим трещину по середине
-                    CrackAdditionManager.CrackAddition(isol, imageName, cH, cW, ConstValues.middleCrackDirectory,
-                                                       ConstValues.sidesForGenerate['middle'],
-                                                       ConstValues.isolatorsTypesDictionary[
-                                                           isolatorType + isolatorColor],
-                                                       crackedIsolatorsDir, whiteLimit, gaussianBlur, logs)
+                for side in self.properties.sidesForGenerate:
+                    if self.properties.computeType == ConstValues.computeTypes['addition']:
+                        DefectImposeManager.DefectAddition(isol, ConstValues.cracksDirectories[ConstValues.sidesForGenerate[side]],
+                                                           crackScale,
+                                                           self.properties.whiteLimit,
+                                                           self.properties.gaussianBlur,
+                                                           ConstValues.sidesForGenerate[side],
+                                                           ConstValues.isolatorsTypes[self.properties.isolatorType + self.properties.isolatorColor],
+                                                           self.properties.crackedIsolatorsDir,
+                                                           self.logs)
+                    elif self.properties.computeType == ConstValues.computeTypes['generation']:
+                        DefectImposeManager.DefectGeneration(isol, ConstValues.sidesForGenerate[side],
+                                                             self.properties.paletteSmoothing,
+                                                             self.properties.gaussianBlur,
+                                                             ConstValues.isolatorsTypes[self.properties.isolatorType + self.properties.isolatorColor],
+                                                             self.properties.fillAlgorithm,
+                                                             self.properties.crackedIsolatorsDir, self.logs)
 
-                self.incProgressBar.emit(math.floor((crackedIsolatorsCount / isolatorsToCompute) * 100))
-                if crackedIsolatorsCount >= isolatorsToCompute:
+                self.incProgressBar.emit(math.floor((crackedIsolatorsCount / self.properties.howIsolatorsToCompute) * 100))
+                if crackedIsolatorsCount >= self.properties.howIsolatorsToCompute:
                     break
 
-                logs.verticalScrollBar().setValue(logs.verticalScrollBar().maximum())
+                self.logs.verticalScrollBar().setValue(self.logs.verticalScrollBar().maximum())
 
                 # Удаляем изолятор перед тем как взять новый
                 del isol
@@ -402,10 +435,10 @@ class ComputeThread(QThread):
                 self.computeStopped.emit("Генерация остановлена!", crackedIsolatorsCount)
                 return
 
-        self.computeFinished.emit("Генерация завершена успешно!", isolatorsToCompute)
+        self.computeFinished.emit("Генерация завершена успешно!", self.properties.howIsolatorsToCompute)
 
-    def StartCrackGeneration(self):
-        pass
+    def stop(self):
+        self.terminate()
 
 
 if __name__ == "__main__":

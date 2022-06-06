@@ -528,6 +528,21 @@ QLineEdit {
 	 border: 0.5px solid rgb(215, 215, 215);
 }
 
+QPushButton {
+	color: rgb(215, 215, 215);
+	background-color: rgb(167, 24, 50);
+}
+
+QPushButton:!enabled {
+	color: rgb(215, 215, 215);
+	background-color: rgb(88, 2, 13);
+}
+
+QPushButton:hover {
+	color: rgb(215, 215, 215);
+	background-color: rgb(109, 3, 16);
+}
+
 /*GROUP BOX*/
 QGroupBox {
 	color: #d7d7d7;
@@ -750,9 +765,9 @@ QSlider::handle:horizontal {
       <property name="geometry">
        <rect>
         <x>5</x>
-        <y>150</y>
+        <y>160</y>
         <width>201</width>
-        <height>211</height>
+        <height>201</height>
        </rect>
       </property>
       <property name="font">
@@ -819,9 +834,9 @@ QSlider::handle:horizontal {
       <property name="geometry">
        <rect>
         <x>215</x>
-        <y>150</y>
+        <y>160</y>
         <width>476</width>
-        <height>211</height>
+        <height>201</height>
        </rect>
       </property>
       <property name="font">
@@ -844,7 +859,7 @@ QSlider::handle:horizontal {
          <x>10</x>
          <y>30</y>
          <width>226</width>
-         <height>171</height>
+         <height>161</height>
         </rect>
        </property>
        <property name="font">
@@ -867,7 +882,7 @@ QSlider::handle:horizontal {
           <x>5</x>
           <y>30</y>
           <width>216</width>
-          <height>131</height>
+          <height>121</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_2">
@@ -954,7 +969,7 @@ QSlider::handle:horizontal {
          <x>241</x>
          <y>30</y>
          <width>226</width>
-         <height>171</height>
+         <height>161</height>
         </rect>
        </property>
        <property name="font">
@@ -1139,9 +1154,9 @@ QSlider::handle:horizontal {
       <property name="geometry">
        <rect>
         <x>355</x>
-        <y>5</y>
+        <y>45</y>
         <width>336</width>
-        <height>141</height>
+        <height>111</height>
        </rect>
       </property>
       <property name="font">
@@ -1168,7 +1183,7 @@ QSlider::handle:horizontal {
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>40</y>
+         <y>30</y>
          <width>308</width>
          <height>28</height>
         </rect>
@@ -1189,7 +1204,7 @@ QSlider::handle:horizontal {
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>80</y>
+         <y>70</y>
          <width>311</width>
          <height>28</height>
         </rect>
@@ -1327,9 +1342,9 @@ QSlider::handle:horizontal {
       <property name="geometry">
        <rect>
         <x>5</x>
-        <y>5</y>
+        <y>45</y>
         <width>336</width>
-        <height>141</height>
+        <height>111</height>
        </rect>
       </property>
       <property name="font">
@@ -1350,7 +1365,7 @@ QSlider::handle:horizontal {
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>40</y>
+         <y>30</y>
          <width>319</width>
          <height>28</height>
         </rect>
@@ -1374,7 +1389,7 @@ QSlider::handle:horizontal {
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>80</y>
+         <y>70</y>
          <width>319</width>
          <height>28</height>
         </rect>
@@ -1498,6 +1513,39 @@ QSlider::handle:horizontal {
         </item>
        </layout>
       </widget>
+     </widget>
+     <widget class="QWidget" name="horizontalLayoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>9</y>
+        <width>671</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_7">
+       <item>
+        <widget class="QPushButton" name="btnGlassMode">
+         <property name="text">
+          <string>Glass mode</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnCeramicBrownMode">
+         <property name="text">
+          <string>Ceramic brown mode</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnCeramicWhiteMode">
+         <property name="text">
+          <string>Ceramic white mode</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
     </widget>
    </widget>
